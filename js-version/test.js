@@ -160,6 +160,11 @@ async function getMonthlySales(empId){
 let _employeeDataCache = null;
 let filteredEmployeeData = null;
 
+const monthlySalesURl = "https://suprsales.in:5032/suprsales_api/Dashboard/monthlySalesChart?id=";
+const topDistributorsURL = "https://suprsales.in:5032/suprsales_api/Dashboard/topDistributor?id=";
+const employeeDataURL = "https://suprsales.in:5032/suprsales_api/Employee/index";
+
+
 _employeeDataCache = await fetchEmpInfo(employeeDataURL);
 filteredEmployeeData = filterEmployeeData();
 
