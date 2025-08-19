@@ -131,14 +131,31 @@ function filterEmployeeData(employeeDataCache) {
   }));
 }
 
+/**
+ * Fetches the monthly sales data for a given employee for the current Fiscal Year.
+ * The data is fetched from the suprsales API.
+ * @param {Number} empId - The employee ID for which to fetch monthly sales.
+ * @returns {Array} Array of monthly sales data for the employee.
+ * Each entry in the array looks like :
+ * {
+ *      "MONTH_YEAR": "April 2025",
+ *      "TOTAL_SALES": 5903124.36
+ * }
+ */
+async function getMonthlySales(empId){
+  if (typeof empId !== "number") {
+    throw new TypeError("empId must be a positive number");
+  }
+  if (typeof monthlySalesURl === "undefined" || monthlySalesURl === null) {
+    throw new Error("Monthly sales endpoint URL is not defined");
+  }
+  const url = monthlySalesURl + empId;
+  const response = await fetch(url);
+  const monthlySales = await response.json();
+  return monthlySales;
 
+}
 
-const monthlySalesURl =
-"https://suprsales.in:5032/suprsales_api/Dashboard/monthlySalesChart?id=";
-const topDistributorsURL =
-"https://suprsales.in:5032/suprsales_api/Dashboard/topDistributor?id=";
-const employeeDataURL =
-"https://suprsales.in:5032/suprsales_api/Employee/index";
 
 let _employeeDataCache = null;
 let filteredEmployeeData = null;
