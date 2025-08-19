@@ -16,7 +16,7 @@ if (!apiKey) {
 
 
 async function fetchEmpInfo(url, timeout = 15) {
-  /*
+  /** 
   This function is used to get the employee data from the suprsales API.
   The employee data is a list of JSON objects.
   The employee id is the id of the employee in the database.
@@ -87,7 +87,8 @@ async function getTopDistributors(empId, topK=10, timeout=15) {
     throw new Error("Top distributors URL is not defined");
   }
   const url = topDistributorsURL + empId;
-  const topDistributors = await fetch(url);
+  const response = await fetch(url);
+  const topDistributors = await response.json();
   // if (!Array.isArray(topDistributors)) {
   //   throw new Error("API response is not an array");
   // }
@@ -96,8 +97,6 @@ async function getTopDistributors(empId, topK=10, timeout=15) {
     (a, b) => (b.TOTAL_SALES || 0) - (a.TOTAL_SALES || 0)
   );
   return sorted.slice(0, topK);
-  
-
 
 }
 
