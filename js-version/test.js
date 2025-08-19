@@ -12,9 +12,10 @@ if (!apiKey) {
   process.exit(1);
 }
 
-const ai = new GoogleGenAI({ apiKey });
 
-async function get_employee_data(mode){
+
+
+async function fetchEmpInfo(url, timeout = 15) {
   /*
   This function is used to get the employee data from the suprsales API.
   The employee data is a list of JSON objects.
