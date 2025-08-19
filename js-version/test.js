@@ -1,4 +1,4 @@
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Type } from "@google/genai";
 import { time } from "console";
 import { configDotenv } from "dotenv";
 // Read API key from env and pass explicitly to avoid ADC fallback
