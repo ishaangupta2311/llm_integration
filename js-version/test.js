@@ -175,7 +175,7 @@ const prompt = "tell me the name of my top distributor."
 const config = {
   tools: [
     {
-      functionDeclarations: [getTopDistributors, filterEmployeeData, getMonthlySales],
+      functionDeclarations: [getTopDistributorsDeclaration, filterEmployeeDataDeclaration, getMonthlySalesDeclaration],
     },
   ],
 };
