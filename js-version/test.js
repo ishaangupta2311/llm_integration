@@ -50,14 +50,13 @@ async function fetchEmpInfo(url, timeout = 15) {
     "REGION_ID": "21",
     "REGION_DESC": "Odisha"
     }
-  */
-  url = "https://suprsales.in:5032/suprsales_api/Employee/index"
-  try{
-    response = await fetch(url, headers={"Accept": "application/json"}, timeout=15);
-    response = response.json();
-    
+    */
 
-  }catch(e){
+  try {
+    const response = await fetch(url);
+    const employeeData = response.json();
+    return employeeData;
+  } catch (e) {
     console.error("Error fetching employee data:", e);
     return [];
   }
