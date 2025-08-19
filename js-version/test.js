@@ -60,14 +60,119 @@ async function fetchEmpInfo(url, timeout = 15) {
     console.error("Error fetching employee data:", e);
     return [];
   }
-
-}
-async function main() {
-  const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
-    contents: "Explain how AI works in a few words",
-  });
-  console.log(response.text);
 }
 
-main();
+
+/** 
+*  This function is used to get the top distributors from the suprsales API.
+*  The top distributors are returned in a list of dictionaries.
+*  Each entry dictionary looks like:
+*    {
+*        "TOTAL_SALES": 5743605.88,
+*        "CUSTOMER_ID": "105709",
+*        "CUSTOMER_NAME": "RAHUL AGRICULTURE CENTRE - JAIPUR-JAIPUR"
+*    }
+*  @param {Number} empId - The employee ID for which to fetch top distributors.
+*  @param {Number} topK - The number of top distributors to fetch. Default is 10.
+*  @returns {Array} Array of dictionaries of top distributors.  
+*/
+async function getTopDistributors(empId, topK=10, timeout=15) {
+  if( typeof empId !== "number") { 
+    throw new TypeError("empId must be a positive number");
+  }
+  if( typeof topK !== "number") {
+    throw new TypeError("topK must be a positive number");
+  }
+  if (typeof topDistributorsURL === "undefined" || topDistributorsURL === null) {
+    throw new Error("Top distributors URL is not defined");
+  }
+  const url = topDistributorsURL + empId;
+  const topDistributors = await fetch(url);
+  // if (!Array.isArray(topDistributors)) {
+  //   throw new Error("API response is not an array");
+  // }
+  // Sort by TOTAL_SALES descending, just in case API does not guarantee order
+  const sorted = topDistributors.sort(
+    (a, b) => (b.TOTAL_SALES || 0) - (a.TOTAL_SALES || 0)
+  );
+  return sorted.slice(0, topK);
+  
+
+
+}
+
+
+
+/**
+ * Filters the employee data to only include the EMP_ID and EMP_NAME fields.
+ * Returns an array of objects with only these two fields.
+ * Each entry looks like:
+ *   { EMP_ID: "10000008", EMP_NAME: "BISWARANJAN DAS" }
+ * 
+ * @param {Array} employeeDataCache - Array of employee objects. If not provided, uses _employeeDataCache.
+ * @returns {Array} Filtered array with EMP_ID and EMP_NAME of each employee only.
+ */
+function filterEmployeeData(employeeDataCache) {
+
+  // Fallback to global cache if not provided
+  if (typeof employeeDataCache === "undefined" || employeeDataCache === null) {
+    if (typeof _employeeDataCache === "undefined" || _employeeDataCache === null) {
+      throw new Error("Employee data cache is not available. Please fetch data first.");
+    }
+    employeeDataCache = _employeeDataCache;
+  }
+
+  if (!Array.isArray(employeeDataCache)) {
+    throw new TypeError("employeeDataCache must be an array");
+  }
+
+  return employeeDataCache.map(emp => ({
+    EMP_ID: emp.EMP_ID,
+    EMP_NAME: emp.EMP_NAME,
+  }));
+}
+
+
+
+const monthlySalesURl =
+"https://suprsales.in:5032/suprsales_api/Dashboard/monthlySalesChart?id=";
+const topDistributorsURL =
+"https://suprsales.in:5032/suprsales_api/Dashboard/topDistributor?id=";
+const employeeDataURL =
+"https://suprsales.in:5032/suprsales_api/Employee/index";
+
+let _employeeDataCache = null;
+let filteredEmployeeData = null;
+
+_employeeDataCache = await fetchEmpInfo(employeeDataURL);
+filteredEmployeeData = filterEmployeeData();
+
+
+const prompt = "tell me the name of my top distributor and how much sales he has done in the last month. also, tell me how much more sales does he have in percentage as compared to the second top distributor.";
+
+const config = {
+  tools: [
+    {
+      functionDeclarations: [fetchEmpInfo, filterEmployeeData],
+    },
+  ],
+};
+  
+// const ai = new GoogleGenAI({ apiKey });
+// const response = await ai.models.generateContentStream({
+//   model: "gemini-2.5-flash",
+//   contents: prompt,
+//   // config : config,
+// });
+
+// let text = "";
+// for await (const chunk of response) {
+//   // console.log(chunk.text);
+//   text += chunk.text;
+// }
+
+const topDistributors = getTopDistributors(10000009, 5);
+console.log("Top Distributors for employee 10000009:", topDistributors);
+// console.log(filteredEmployeeData[0]);
+
+
