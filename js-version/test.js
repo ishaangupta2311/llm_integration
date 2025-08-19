@@ -166,7 +166,7 @@ const employeeDataURL = "https://suprsales.in:5032/suprsales_api/Employee/index"
 
 
 _employeeDataCache = await fetchEmpInfo(employeeDataURL);
-filteredEmployeeData = filterEmployeeData();
+filteredEmployeeData = filterEmployeeData(_employeeDataCache);
 
 // Currently too complex.
 // const prompt = "tell me the name of my top distributor and how much sales he has done in the last month. also, tell me how much more sales does he have in percentage as compared to the second top distributor.";
