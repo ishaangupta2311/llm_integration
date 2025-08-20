@@ -77,6 +77,8 @@ async function fetchEmpInfo(url, timeout = 15) {
 *  @returns {Array} Array of dictionaries of top distributors.  
 */
 async function getTopDistributors(empId, topK=10, timeout=15) {
+  console.log(`Tool Call: getTopDistributors(empId=${empId}, topK=${topK})`);
+
   if( typeof empId !== "number") { 
     throw new TypeError("empId must be a positive number");
   }
@@ -112,7 +114,6 @@ async function getTopDistributors(empId, topK=10, timeout=15) {
  * @returns {Array} Filtered array with EMP_ID and EMP_NAME of each employee only.
  */
 function filterEmployeeData(employeeDataCache) {
-
   // Fallback to global cache if not provided
   if (typeof employeeDataCache === "undefined" || employeeDataCache === null) {
     if (typeof _employeeDataCache === "undefined" || _employeeDataCache === null) {
@@ -143,6 +144,7 @@ function filterEmployeeData(employeeDataCache) {
  * }
  */
 async function getMonthlySales(empId){
+  console.log(`Tool Call: getMonthlySales(empId=${empId})`);
   if (typeof empId !== "number") {
     throw new TypeError("empId must be a positive number");
   }
