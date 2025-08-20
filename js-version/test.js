@@ -172,7 +172,9 @@ filteredEmployeeData = filterEmployeeData(_employeeDataCache);
 
 // Currently too complex.
 // const prompt = "tell me the name of my top distributor and how much sales he has done in the last month. also, tell me how much more sales does he have in percentage as compared to the second top distributor.";
-const prompt = "tell me the name of my top distributor."
+
+const prompt =
+  "tell me the name of my top distributor. my employee id is 10000009. also, tell me what is SAP in few words.";
 
 const config = {
   tools: [
