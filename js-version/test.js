@@ -179,7 +179,8 @@ const prompt =
 const config = {
   tools: [
     {
-      functionDeclarations: [getTopDistributorsDeclaration, filterEmployeeDataDeclaration, getMonthlySalesDeclaration],
+      functionDeclarations: [getTopDistributorsDeclaration, getMonthlySalesDeclaration],
+      // functionDeclarations: [getTopDistributorsDeclaration, filterEmployeeDataDeclaration, getMonthlySalesDeclaration],
     },
   ],
 };
