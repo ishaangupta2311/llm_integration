@@ -158,6 +158,39 @@ async function getMonthlySales(empId){
 
 }
 
+const getTopDistributorsDeclaration = {
+  name: "getTopDistributors",
+  description: "Fetches the top distributors for a given employee",
+  parameters : {
+    type: Type.OBJECT,
+    properties: {
+      empId: { 
+        type: Type.NUMBER,
+        description: "The employee ID for which to fetch top distributors." },
+      topK: { 
+        type: Type.NUMBER,
+        description: "The number of top distributors to fetch. Default is 10.",
+        default: 10 }
+    },
+    required : ['empId', 'topK']
+  }
+}
+
+const getMonthlySalesDeclaration = {
+  name: "getMonthlySales",
+  description: "Fetches the monthly sales data for a given employee for the current Fiscal Year.",
+  parameters: {
+    type : Type.OBJECT,
+    properties: {
+      empId: { 
+        type: Type.NUMBER,
+        description: "The employee ID for which to fetch monthly sales." }
+    },
+    required : ['empId']
+  },
+  implementation: getMonthlySales
+}
+
 
 let _employeeDataCache = null;
 let filteredEmployeeData = null;
