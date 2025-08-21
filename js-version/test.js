@@ -230,22 +230,77 @@ const config = {
     },
   ],
 };
-  
-// const ai = new GoogleGenAI({ apiKey });
-// const response = await ai.models.generateContentStream({
-//   model: "gemini-2.5-flash",
-//   contents: prompt,
-//   // config : config,
-// });
 
-// let text = "";
-// for await (const chunk of response) {
-//   // console.log(chunk.text);
-//   text += chunk.text;
-// }
-
-const topDistributors = getTopDistributors(10000009, 5);
-console.log("Top Distributors for employee 10000009:", topDistributors);
-// console.log(filteredEmployeeData[0]);
+const prompt =
+  "tell me the name of my top distributor for employee id 10000009. I need both: 1) his total sales compared to the second top distributor with percentage difference, AND 2) the sales for previous month done by this employee.";
 
 
+const ai = new GoogleGenAI({ apiKey });
+
+const chat = ai.chats.create({
+  model: "gemini-2.5-flash",
+  config: config,
+});
+
+// Start the chat with the user prompt
+let response = await chat.sendMessage({
+  message: {
+    role: "user",
+    parts: [{ text: prompt }],
+  },
+});
+
+const toolFunctions = {
+  getTopDistributors,
+  getMonthlySales,
+};
+
+console.log("______________________________");
+
+while (response.functionCalls && response.functionCalls.length > 0) {
+  for (const funCall of response.functionCalls) {
+    const { name, args } = funCall;
+    if (!toolFunctions[name]) throw new Error(`Unknown function call: ${name}`);
+    console.log(`Executing function: ${name} with args:`, args);
+    const toolResponse = await toolFunctions[name](args);
+    // Send the function response back to the chat
+    response = await chat.sendMessage({
+      message: {
+        role: "user",
+        parts: [
+          {
+            functionResponse: {
+              name,
+              response: { result: toolResponse },
+            },
+          },
+        ],
+      },
+    });
+  }
+}
+
+// Print the final answer
+const parts = response.candidates[0].content.parts;
+for (const part of parts) {
+  if (part.text) {
+    console.log(part.text);
+  }
+}
+
+/**
+ * Check if response content contains various parts.
+ * Loop over each part:
+ *  If part contains function calls, execute them.
+ *  else skip.
+ * If parts contains only text, print it.
+ */
+
+/*
+tesing api calls and returned values here |
+                                         \|/ 
+                                          ' 
+*/
+// const topDistributors = await getTopDistributors(10000009, 3);
+// console.log("Top Distributors for employee 10000009:", topDistributors);
+// console.log("Monthly sales for employee 10000009:", await getMonthlySales(10000009));
