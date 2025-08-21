@@ -12,9 +12,6 @@ if (!apiKey) {
   process.exit(1);
 }
 
-
-
-
 async function fetchEmpInfo(url, timeout = 15) {
   /** 
   This function is used to get the employee data from the suprsales API.
@@ -54,8 +51,10 @@ async function fetchEmpInfo(url, timeout = 15) {
 
   try {
     const response = await fetch(url);
-    if(!response.ok){
-      console.error(`HTTP error while fetching employee info: ${response.status}`);
+    if (!response.ok) {
+      console.error(
+        `HTTP error while fetching employee info: ${response.status}`
+      );
       return [];
     }
     const employeeData = await response.json();
@@ -108,14 +107,12 @@ async function getTopDistributors(empId, topK=10, timeout=15) {
 
 }
 
-
-
 /**
  * Filters the employee data to only include the EMP_ID and EMP_NAME fields.
  * Returns an array of objects with only these two fields.
  * Each entry looks like:
  *   { EMP_ID: "10000008", EMP_NAME: "BISWARANJAN DAS" }
- * 
+ *
  * @param {Array} employeeDataCache - Array of employee objects. If not provided, uses _employeeDataCache.
  * @returns {Array} Filtered array with EMP_ID and EMP_NAME of each employee only.
  */
@@ -149,7 +146,7 @@ function filterEmployeeData(employeeDataCache) {
  *      "TOTAL_SALES": 5903124.36
  * }
  */
-async function getMonthlySales(empId){
+async function getMonthlySales({ empId }) {
   console.log(`Tool Call: getMonthlySales(empId=${empId})`);
   if (typeof empId !== "number") {
     throw new TypeError("empId must be a positive number");
@@ -166,26 +163,27 @@ async function getMonthlySales(empId){
     console.error(`Error in getMonthlySales for empId ${empId}:`, e);
     return []; // Return empty array on error
   }
-
 }
 
 const getTopDistributorsDeclaration = {
   name: "getTopDistributors",
   description: "Fetches the top distributors for a given employee",
-  parameters : {
+  parameters: {
     type: Type.OBJECT,
     properties: {
-      empId: { 
+      empId: {
         type: Type.NUMBER,
-        description: "The employee ID for which to fetch top distributors." },
-      topK: { 
+        description: "The employee ID for which to fetch top distributors.",
+      },
+      topK: {
         type: Type.NUMBER,
         description: "The number of top distributors to fetch. Default is 10.",
-        default: 10 }
+        default: 10,
+      },
     },
-    required : ['empId', 'topK']
-  }
-}
+    required: ["empId", "topK"],
+  },
+};
 
 const getMonthlySalesDeclaration = {
   name: "getMonthlySales",
