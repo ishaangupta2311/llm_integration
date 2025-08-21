@@ -210,25 +210,23 @@ const functions = {
 let _employeeDataCache = null;
 let filteredEmployeeData = null;
 
-const monthlySalesURl = "https://suprsales.in:5032/suprsales_api/Dashboard/monthlySalesChart?id=";
-const topDistributorsURL = "https://suprsales.in:5032/suprsales_api/Dashboard/topDistributor?id=";
-const employeeDataURL = "https://suprsales.in:5032/suprsales_api/Employee/index";
-
+const monthlySalesURL =
+  "https://suprsales.in:5032/suprsales_api/Dashboard/monthlySalesChart?id=";
+const topDistributorsURL =
+  "https://suprsales.in:5032/suprsales_api/Dashboard/topDistributor?id=";
+const employeeDataURL = process.env.EMPLOYEE_DATA_API;
 
 _employeeDataCache = await fetchEmpInfo(employeeDataURL);
 filteredEmployeeData = filterEmployeeData(_employeeDataCache);
 
-// Currently too complex.
-// const prompt = "tell me the name of my top distributor and how much sales he has done in the last month. also, tell me how much more sales does he have in percentage as compared to the second top distributor.";
-
-const prompt =
-  "tell me the name of my top distributor. my employee id is 10000009. also, tell me what is SAP in few words.";
 
 const config = {
   tools: [
     {
-      functionDeclarations: [getTopDistributorsDeclaration, getMonthlySalesDeclaration],
-      // functionDeclarations: [getTopDistributorsDeclaration, filterEmployeeDataDeclaration, getMonthlySalesDeclaration],
+      functionDeclarations: [
+        getTopDistributorsDeclaration,
+        getMonthlySalesDeclaration,
+      ],
     },
   ],
 };
