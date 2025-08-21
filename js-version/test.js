@@ -202,11 +202,6 @@ const getMonthlySalesDeclaration = {
 };
 
 /* TEST CODE FOR THE FILE STARTS HERE  : */
-const functions = {
-  getTopDistributors,
-  getMonthlySales,
-};
-
 let _employeeDataCache = null;
 let filteredEmployeeData = null;
 
