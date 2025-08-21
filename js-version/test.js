@@ -54,7 +54,11 @@ async function fetchEmpInfo(url, timeout = 15) {
 
   try {
     const response = await fetch(url);
-    const employeeData = response.json();
+    if(!response.ok){
+      console.error(`HTTP error while fetching employee info: ${response.status}`);
+      return [];
+    }
+    const employeeData = await response.json();
     return employeeData;
   } catch (e) {
     console.error("Error fetching employee data:", e);
@@ -88,17 +92,19 @@ async function getTopDistributors(empId, topK=10, timeout=15) {
   if (typeof topDistributorsURL === "undefined" || topDistributorsURL === null) {
     throw new Error("Top distributors URL is not defined");
   }
-  const url = topDistributorsURL + empId;
-  const response = await fetch(url);
-  const topDistributors = await response.json();
-  // if (!Array.isArray(topDistributors)) {
-  //   throw new Error("API response is not an array");
-  // }
-  // Sort by TOTAL_SALES descending, just in case API does not guarantee order
-  const sorted = topDistributors.sort(
-    (a, b) => (b.TOTAL_SALES || 0) - (a.TOTAL_SALES || 0)
-  );
-  return sorted.slice(0, topK);
+  try{
+    const url = topDistributorsURL + empId;
+    const response = await fetch(url);
+    const topDistributors = await response.json();
+    // Sort by TOTAL_SALES descending, just in case API does not guarantee order
+    const sorted = topDistributors.sort(
+      (a, b) => (b.TOTAL_SALES || 0) - (a.TOTAL_SALES || 0)
+    );
+    return sorted.slice(0, topK);
+  }catch(e){
+    console.error(`Error in getTopDistributors for empId ${empId}:`, e);
+    return [];
+  }
 
 }
 
@@ -148,13 +154,18 @@ async function getMonthlySales(empId){
   if (typeof empId !== "number") {
     throw new TypeError("empId must be a positive number");
   }
-  if (typeof monthlySalesURl === "undefined" || monthlySalesURl === null) {
+  if (typeof monthlySalesURL === "undefined" || monthlySalesURL === null) {
     throw new Error("Monthly sales endpoint URL is not defined");
   }
-  const url = monthlySalesURl + empId;
-  const response = await fetch(url);
-  const monthlySales = await response.json();
-  return monthlySales;
+  try {
+    const url = monthlySalesURL + empId;
+    const response = await fetch(url);
+    const monthlySales = await response.json();
+    return monthlySales;
+  } catch (e) {
+    console.error(`Error in getMonthlySales for empId ${empId}:`, e);
+    return []; // Return empty array on error
+  }
 
 }
 
