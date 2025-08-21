@@ -187,18 +187,19 @@ const getTopDistributorsDeclaration = {
 
 const getMonthlySalesDeclaration = {
   name: "getMonthlySales",
-  description: "Fetches the monthly sales data for a given employee for the current Fiscal Year.",
+  description:
+    "Fetches the monthly sales data for a given employee for the current Fiscal Year. Use this when asked about monthly sales, trends, or time-based sales analysis.",
   parameters: {
-    type : Type.OBJECT,
+    type: Type.OBJECT,
     properties: {
-      empId: { 
+      empId: {
         type: Type.NUMBER,
-        description: "The employee ID for which to fetch monthly sales." }
+        description: "The employee ID for which to fetch monthly sales data.",
+      },
     },
-    required : ['empId']
+    required: ["empId"],
   },
-  implementation: getMonthlySales
-}
+};
 
 
 let _employeeDataCache = null;
