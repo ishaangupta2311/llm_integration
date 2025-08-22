@@ -132,3 +132,40 @@ const config = {
     },
   ],
 };
+
+
+export async function POST(req) {
+  const { messages } = await req.json();
+  const ai = new GoogleGenAI({ apiKey });
+  const chat = ai.chats.create({ model: "gemini-2.5-flash", config });
+
+  let response = await chat.sendMessage({
+    message: {
+      role: "user",
+      parts: [{ text: messages[messages.length - 1].content }],
+    },
+  });
+
+  // Handle function calls
+  while (response.functionCalls && response.functionCalls.length > 0) {
+    for (const funCall of response.functionCalls) {
+      const { name, args } = funCall;
+      if (!toolFunctions[name])
+        throw new Error(`Unknown function call: ${name}`);
+      const toolResponse = await toolFunctions[name](args);
+      response = await chat.sendMessage({
+        message: {
+          role: "user",
+          parts: [
+            { functionResponse: { name, response: { result: toolResponse } } },
+          ],
+        },
+      });
+    }
+  }
+
+  // Return the final answer
+  const parts = response.candidates[0].content.parts;
+  const text = parts.map((part) => part.text).join("\n");
+  return NextResponse.json({ text });
+}
