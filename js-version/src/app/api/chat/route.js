@@ -116,3 +116,15 @@ const getMonthlySalesDeclaration = {
     required: ["empId"],
   },
 };
+
+
+const config = {
+  tools: [
+    {
+      functionDeclarations: [
+        getTopDistributorsDeclaration,
+        getMonthlySalesDeclaration,
+      ],
+    },
+  ],
+};
