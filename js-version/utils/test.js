@@ -65,33 +65,35 @@ async function fetchEmpInfo(url, timeout = 15) {
   }
 }
 
-
-/** 
-*  This function is used to get the top distributors from the suprsales API.
-*  The top distributors are returned in a list of dictionaries.
-*  Each entry dictionary looks like:
-*    {
-*        "TOTAL_SALES": 5743605.88,
-*        "CUSTOMER_ID": "105709",
-*        "CUSTOMER_NAME": "RAHUL AGRICULTURE CENTRE - JAIPUR-JAIPUR"
-*    }
-*  @param {Number} empId - The employee ID for which to fetch top distributors.
-*  @param {Number} topK - The number of top distributors to fetch. Default is 10.
-*  @returns {Array} Array of dictionaries of top distributors.  
-*/
-async function getTopDistributors(empId, topK=10, timeout=15) {
+/**
+ *  This function is used to get the top distributors from the suprsales API.
+ *  The top distributors are returned in a list of dictionaries.
+ *  Each entry dictionary looks like:
+ *    {
+ *        "TOTAL_SALES": 5743605.88,
+ *        "CUSTOMER_ID": "105709",
+ *        "CUSTOMER_NAME": "RAHUL AGRICULTURE CENTRE - JAIPUR-JAIPUR"
+ *    }
+ *  @param {Number} empId - The employee ID for which to fetch top distributors.
+ *  @param {Number} topK - The number of top distributors to fetch. Default is 10.
+ *  @returns {Array} Array of dictionaries of top distributors.
+ */
+async function getTopDistributors({empId, topK = 10, timeout = 15}) {
   console.log(`Tool Call: getTopDistributors(empId=${empId}, topK=${topK})`);
 
-  if( typeof empId !== "number") { 
+  if (typeof empId !== "number") {
     throw new TypeError("empId must be a positive number");
   }
-  if( typeof topK !== "number") {
+  if (typeof topK !== "number") {
     throw new TypeError("topK must be a positive number");
   }
-  if (typeof topDistributorsURL === "undefined" || topDistributorsURL === null) {
+  if (
+    typeof topDistributorsURL === "undefined" ||
+    topDistributorsURL === null
+  ) {
     throw new Error("Top distributors URL is not defined");
   }
-  try{
+  try {
     const url = topDistributorsURL + empId;
     const response = await fetch(url);
     const topDistributors = await response.json();
@@ -100,11 +102,10 @@ async function getTopDistributors(empId, topK=10, timeout=15) {
       (a, b) => (b.TOTAL_SALES || 0) - (a.TOTAL_SALES || 0)
     );
     return sorted.slice(0, topK);
-  }catch(e){
+  } catch (e) {
     console.error(`Error in getTopDistributors for empId ${empId}:`, e);
     return [];
   }
-
 }
 
 /**
@@ -119,8 +120,13 @@ async function getTopDistributors(empId, topK=10, timeout=15) {
 function filterEmployeeData(employeeDataCache) {
   // Fallback to global cache if not provided
   if (typeof employeeDataCache === "undefined" || employeeDataCache === null) {
-    if (typeof _employeeDataCache === "undefined" || _employeeDataCache === null) {
-      throw new Error("Employee data cache is not available. Please fetch data first.");
+    if (
+      typeof _employeeDataCache === "undefined" ||
+      _employeeDataCache === null
+    ) {
+      throw new Error(
+        "Employee data cache is not available. Please fetch data first."
+      );
     }
     employeeDataCache = _employeeDataCache;
   }
@@ -129,7 +135,7 @@ function filterEmployeeData(employeeDataCache) {
     throw new TypeError("employeeDataCache must be an array");
   }
 
-  return employeeDataCache.map(emp => ({
+  return employeeDataCache.map((emp) => ({
     EMP_ID: emp.EMP_ID,
     EMP_NAME: emp.EMP_NAME,
   }));
@@ -214,7 +220,6 @@ const employeeDataURL = process.env.EMPLOYEE_DATA_API;
 _employeeDataCache = await fetchEmpInfo(employeeDataURL);
 filteredEmployeeData = filterEmployeeData(_employeeDataCache);
 
-
 const config = {
   tools: [
     {
@@ -228,7 +233,6 @@ const config = {
 
 const prompt =
   "tell me the name of my top distributor for employee id 10000009. I need both: 1) his total sales compared to the second top distributor with percentage difference, AND 2) the sales for previous month done by this employee.";
-
 
 const ai = new GoogleGenAI({ apiKey });
 
