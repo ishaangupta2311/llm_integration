@@ -117,6 +117,10 @@ const getMonthlySalesDeclaration = {
   },
 };
 
+const toolFunctions = {
+  getTopDistributors,
+  getMonthlySales,
+};
 
 const config = {
   tools: [
