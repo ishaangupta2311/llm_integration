@@ -119,4 +119,11 @@
   body {
     @apply bg-background text-foreground;
   }
+  /* Keep avatar images contained */
+  [data-slot="avatar"] img,
+  .avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
 }
