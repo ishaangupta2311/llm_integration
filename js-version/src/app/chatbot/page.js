@@ -1,109 +1,385 @@
-// js-version/src/app/chat/page.js
+// app/chat/page.js
 "use client";
-import { Card, CardHeader, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+
+import { useRef, useEffect, useState, useMemo } from "react";
+import {
+  Card,
+  CardHeader,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useRef, useEffect, useState } from "react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import {
+  Send,
+  StopCircle,
+  Bot,
+  User,
+  Clock,
+  Sparkles,
+  Loader2,
+  AlertTriangle,
+} from "lucide-react";
+
+const BOT_AVATAR = "https://api.dicebear.com/7.x/bottts/svg?seed=Gemini";
+const USER_AVATAR = "https://api.dicebear.com/7.x/personas/svg?seed=User";
+const MAX_MESSAGE_CHARS = 2000;
 
 export default function ChatPage() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [aborted, setAborted] = useState(false);
+  const [inlineError, setInlineError] = useState(""); // inline feedback instead of toast
   const scrollRef = useRef(null);
+  const inputRef = useRef(null);
+  const controllerRef = useRef(null);
+
+  const canSend =
+    input.trim().length > 0 &&
+    input.trim().length <= MAX_MESSAGE_CHARS &&
+    !loading;
 
   async function sendMessage(e) {
-    e.preventDefault();
-    if (!input.trim()) return;
-    const newMessages = [...messages, { role: "user", content: input }];
+    e?.preventDefault?.();
+    if (!canSend) return;
+
+    setInlineError(""); // clear previous error
+
+    const userMsg = {
+      role: "user",
+      content: input.trim(),
+      timestamp: new Date().toISOString(),
+      id: crypto.randomUUID(),
+    };
+
+    const newMessages = [...messages, userMsg];
+
     setMessages(newMessages);
     setInput("");
     setLoading(true);
+    setAborted(false);
 
-    const res = await fetch("/api/chat", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: newMessages }),
-    });
-    const data = await res.json();
-    setMessages([...newMessages, { role: "assistant", content: data.text }]);
-    setLoading(false);
+    try {
+      controllerRef.current = new AbortController();
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        signal: controllerRef.current.signal,
+        body: JSON.stringify({ messages: newMessages }),
+      });
+
+      if (!res.ok) {
+        throw new Error(`Request failed: ${res.status}`);
+      }
+
+      const data = await res.json();
+
+      const botMsg = {
+        role: "assistant",
+        content: data.text || "Sorry, I couldn’t generate a response.",
+        timestamp: new Date().toISOString(),
+        id: crypto.randomUUID(),
+      };
+
+      setMessages((prev) => [...prev, botMsg]);
+    } catch (err) {
+      if (aborted) {
+        setInlineError("Generation stopped.");
+      } else {
+        setInlineError(
+          err?.message || "Something went wrong. Please try again."
+        );
+      }
+    } finally {
+      setLoading(false);
+      controllerRef.current = null;
+    }
   }
 
-  // Auto-scroll to bottom on new message
+  function stopGeneration() {
+    if (controllerRef.current) {
+      setAborted(true);
+      controllerRef.current.abort();
+    }
+  }
+
+  // Auto-scroll to bottom on new message or loading start/end
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
 
+  // Focus textarea on mount
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  function formatTime(ts) {
+    if (!ts) return "";
+    const date = new Date(ts);
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  }
+
+  const charCount = input.trim().length;
+  const charTooLong = charCount > MAX_MESSAGE_CHARS;
+
+  const groupedMessages = useMemo(() => {
+    const groups = [];
+    for (const m of messages) {
+      const last = groups[groups.length - 1];
+      if (last && last.role === m.role) {
+        last.items.push(m);
+      } else {
+        groups.push({ role: m.role, items: [m] });
+      }
+    }
+    return groups;
+  }, [messages]);
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-900 to-gray-800">
-      <Card className="w-full max-w-xl shadow-2xl border-none bg-gray-950">
-        <CardHeader>
-          <h1 className="text-3xl font-bold text-center text-blue-400 mb-2">
-            Gemini Chatbot
-          </h1>
-          <p className="text-center text-gray-400 text-sm">
-            Ask about sales, distributors, or anything else!
-          </p>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea
-            className="h-96 rounded-md border bg-gray-900 p-4 mb-4"
-            ref={scrollRef}
-          >
-            <div className="flex flex-col gap-3">
-              {messages.length === 0 && (
-                <div className="text-center text-gray-500 italic">
-                  Start the conversation…
-                </div>
+    <div className="mx-auto max-w-5xl p-4 md:p-6 lg:p-8">
+      <Card className="border-muted shadow-sm">
+        <Header />
+
+        <Separator />
+
+        <CardContent className="p-0">
+          <ScrollArea className="h-[60vh] md:h-[68vh] px-4" ref={scrollRef}>
+            <div className="py-4 space-y-6">
+              {messages.length === 0 ? (
+                <EmptyState />
+              ) : (
+                groupedMessages.map((group, idx) => (
+                  <MessageGroup key={idx} role={group.role}>
+                    {group.items.map((msg) => (
+                      <MessageBubble
+                        key={msg.id}
+                        role={msg.role}
+                        content={msg.content}
+                        time={formatTime(msg.timestamp)}
+                      />
+                    ))}
+                  </MessageGroup>
+                ))
               )}
-              {messages.map((msg, i) => (
-                <div
-                  key={i}
-                  className={`flex ${
-                    msg.role === "user" ? "justify-end" : "justify-start"
-                  }`}
-                >
-                  <div
-                    className={`rounded-lg px-4 py-2 max-w-[80%] ${
-                      msg.role === "user"
-                        ? "bg-blue-600 text-white self-end"
-                        : "bg-gray-800 text-blue-200 self-start"
-                    }`}
-                  >
-                    <span className="block text-xs mb-1 opacity-70">
-                      {msg.role === "user" ? "You" : "Gemini"}
-                    </span>
-                    {msg.content}
-                  </div>
-                </div>
-              ))}
-              {loading && (
-                <div className="flex justify-start">
-                  <div className="rounded-lg px-4 py-2 bg-gray-800 text-blue-200 animate-pulse">
-                    Gemini is typing…
-                  </div>
-                </div>
-              )}
+
+              {loading && <AssistantTyping />}
             </div>
           </ScrollArea>
-          <form onSubmit={sendMessage} className="flex gap-2">
-            <Input
-              className="flex-1"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Type your message…"
-              disabled={loading}
-              autoFocus
-            />
-            <Button type="submit" disabled={loading || !input.trim()}>
-              Send
-            </Button>
-          </form>
         </CardContent>
+
+        <Separator />
+
+        {/* Inline feedback row (errors / info) */}
+        {(inlineError || charTooLong) && (
+          <div className="px-4 pt-3">
+            <div className="flex items-start gap-2 text-sm">
+              <AlertTriangle className="mt-0.5 h-4 w-4 text-amber-600" />
+              <p
+                className={cn(
+                  "leading-relaxed",
+                  charTooLong ? "text-destructive" : "text-amber-700"
+                )}
+              >
+                {charTooLong
+                  ? `Message too long (${charCount}/${MAX_MESSAGE_CHARS}).`
+                  : inlineError}
+              </p>
+            </div>
+          </div>
+        )}
+
+        <CardFooter className="p-4">
+          <form onSubmit={sendMessage} className="flex w-full items-end gap-2">
+            <div className="flex-1">
+              <Textarea
+                ref={inputRef}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Ask about sales, distributors, trends, or anything else..."
+                className={cn(
+                  "min-h-[56px] max-h-[160px] resize-y",
+                  charTooLong &&
+                    "border-destructive focus-visible:ring-destructive"
+                )}
+                disabled={loading}
+              />
+              <div className="mt-2 flex items-center justify-between">
+                <Badge variant="outline" className="gap-1">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Smart chat
+                </Badge>
+                <span
+                  className={cn(
+                    "text-xs tabular-nums",
+                    charTooLong ? "text-destructive" : "text-muted-foreground"
+                  )}
+                >
+                  {charCount}/{MAX_MESSAGE_CHARS}
+                </span>
+              </div>
+            </div>
+
+            {loading ? (
+              <Button
+                type="button"
+                variant="secondary"
+                className="shrink-0"
+                onClick={stopGeneration}
+              >
+                <StopCircle className="mr-2 h-4 w-4" />
+                Stop
+              </Button>
+            ) : (
+              <Button type="submit" className="shrink-0" disabled={!canSend}>
+                <Send className="mr-2 h-4 w-4" />
+                Send
+              </Button>
+            )}
+          </form>
+        </CardFooter>
       </Card>
+    </div>
+  );
+}
+
+// Header: keep compact avatar (h-9 w-9)
+function Header() {
+  return (
+    <CardHeader className="flex flex-row items-center justify-between py-4">
+      <div className="flex items-center gap-3">
+        <Avatar className="h-9 w-9 shrink-0">
+          <AvatarImage
+            src={BOT_AVATAR}
+            alt="Assistant"
+            className="h-full w-full object-contain"
+          />
+          <AvatarFallback>
+            <Bot className="h-5 w-5" />
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <div className="font-semibold leading-tight">Sales Assistant</div>
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <span className="inline-flex h-2 w-2 rounded-full bg-emerald-500" />
+            Online
+          </div>
+        </div>
+      </div>
+    </CardHeader>
+  );
+}
+
+// Empty state: medium avatar (h-14 w-14) but still constrained
+function EmptyState() {
+  return (
+    <div className="flex h-[40vh] flex-col items-center justify-center text-center gap-3 text-muted-foreground">
+      <Avatar className="h-14 w-14">
+        <AvatarImage
+          src={BOT_AVATAR}
+          alt="Assistant"
+          className="h-full w-full object-contain"
+        />
+        <AvatarFallback>AI</AvatarFallback>
+      </Avatar>
+      <div className="max-w-md">
+        <p className="text-sm">
+          Ask about monthly sales, top distributors, or trends. Try:
+        </p>
+        <p className="mt-1 text-sm italic">
+          “Show top 5 distributors for employee 1023” or “Plot FY 2025 monthly
+          sales for 1102”
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// Message group: small avatars (h-8 w-8)
+function MessageGroup({ role, children }) {
+  const isUser = role === "user";
+  return (
+    <div
+      className={cn(
+        "flex w-full gap-3",
+        isUser ? "justify-end" : "justify-start"
+      )}
+    >
+      {!isUser && (
+        <Avatar className="h-8 w-8 mt-0.5 shrink-0">
+          <AvatarImage
+            src={BOT_AVATAR}
+            alt="Assistant"
+            className="h-full w-full object-contain"
+          />
+          <AvatarFallback>AI</AvatarFallback>
+        </Avatar>
+      )}
+      <div
+        className={cn("flex max-w-[85%] flex-col gap-1", isUser && "items-end")}
+      >
+        {children}
+      </div>
+      {isUser && (
+        <Avatar className="h-8 w-8 mt-0.5 shrink-0">
+          <AvatarImage
+            src={USER_AVATAR}
+            alt="User"
+            className="h-full w-full object-contain"
+          />
+          <AvatarFallback>
+            <User className="h-4 w-4" />
+          </AvatarFallback>
+        </Avatar>
+      )}
+    </div>
+  );
+}
+
+function MessageBubble({ role, content, time }) {
+  const isUser = role === "user";
+  return (
+    <div
+      className={cn(
+        "rounded-2xl px-3 py-2 text-sm shadow-sm ring-1 ring-border",
+        isUser
+          ? "bg-primary text-primary-foreground"
+          : "bg-muted/60 text-foreground"
+      )}
+    >
+      <div className="whitespace-pre-wrap break-words">{content}</div>
+      <div
+        className={cn(
+          "mt-1 text-[10px] opacity-70",
+          isUser ? "text-primary-foreground" : "text-muted-foreground"
+        )}
+      >
+        {time}
+      </div>
+    </div>
+  );
+}
+
+function AssistantTyping() {
+  return (
+    <div className="flex items-start gap-3">
+      <Avatar className="h-8 w-8 mt-0.5">
+        <AvatarImage src={BOT_AVATAR} alt="Assistant" />
+        <AvatarFallback>AI</AvatarFallback>
+      </Avatar>
+      <div className="rounded-2xl px-3 py-2 text-sm bg-muted/60 ring-1 ring-border shadow-sm">
+        <div className="flex items-center gap-2">
+          <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+          <span className="text-muted-foreground">Assistant is typing…</span>
+        </div>
+      </div>
     </div>
   );
 }
