@@ -201,8 +201,11 @@ export default function ChatPage() {
         )}
 
         <CardFooter className="p-4">
-          <form onSubmit={sendMessage} className="flex w-full items-end gap-2">
-            <div className="flex-1">
+          <form
+            onSubmit={sendMessage}
+            className="flex w-full gap-2 items-end"
+          >
+            <div className="flex-1 flex flex-col justify-end">
               <Textarea
                 ref={inputRef}
                 value={input}
@@ -231,22 +234,32 @@ export default function ChatPage() {
               </div>
             </div>
 
-            {loading ? (
-              <Button
-                type="button"
-                variant="secondary"
-                className="shrink-0"
-                onClick={stopGeneration}
-              >
-                <StopCircle className="mr-2 h-4 w-4" />
-                Stop
-              </Button>
-            ) : (
-              <Button type="submit" className="shrink-0" disabled={!canSend}>
-                <Send className="mr-2 h-4 w-4" />
-                Send
-              </Button>
-            )}
+            <div className="flex flex-col justify-start self-stretch">
+              <div className="mt-0">
+                {loading ? (
+                  <Button
+                    type="button"
+                    variant="primary"
+                    className="shrink-0"
+                    onClick={stopGeneration}
+                    style={{ minHeight: 56 }}
+                  >
+                    <StopCircle className="mr-2 h-4 w-4" />
+                    Stop
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    className="shrink-0"
+                    disabled={!canSend}
+                    style={{ minHeight: 56 }}
+                  >
+                    <Send className="mr-2 h-4 w-4" />
+                    Send
+                  </Button>
+                )}
+              </div>
+            </div>
           </form>
         </CardFooter>
       </Card>
