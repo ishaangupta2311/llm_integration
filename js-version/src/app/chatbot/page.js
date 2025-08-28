@@ -145,7 +145,7 @@ export default function ChatPage() {
 
   return (
     <div className="mx-auto max-w-5xl p-4 md:p-6 lg:p-8 h-screen box-border flex flex-col">
-      <Card className="border-muted shadow-sm flex flex-col flex-1 min-h-0">
+      <Card className="border-muted shadow-m flex flex-col gap-0 flex-1 min-h-0 py-0">
         <Header />
 
         <Separator />
@@ -270,7 +270,7 @@ export default function ChatPage() {
 // Header: keep compact avatar (h-9 w-9)
 function Header() {
   return (
-    <CardHeader className="flex flex-row items-center justify-between py-4">
+    <CardHeader className="flex flex-col items-start justify-between py-4">
       <div className="flex items-center gap-3">
         <Avatar className="h-9 w-9 shrink-0">
           <AvatarImage
