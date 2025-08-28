@@ -215,7 +215,8 @@ const monthlySalesURL =
   "https://suprsales.in:5032/suprsales_api/Dashboard/monthlySalesChart?id=";
 const topDistributorsURL =
   "https://suprsales.in:5032/suprsales_api/Dashboard/topDistributor?id=";
-const employeeDataURL = process.env.EMPLOYEE_DATA_API;
+const employeeDataURL =
+  "https://suprsales.in:5032/suprsales_api/Employee/index";
 
 _employeeDataCache = await fetchEmpInfo(employeeDataURL);
 filteredEmployeeData = filterEmployeeData(_employeeDataCache);
