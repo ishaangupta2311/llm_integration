@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@google/genai": "^1.15.0",
+    "@langchain/core": "^0.3.72",
+    "@langchain/langgraph": "^0.4.8",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-separator": "^1.1.7",
