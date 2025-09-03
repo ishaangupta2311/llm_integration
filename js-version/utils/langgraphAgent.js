@@ -3,6 +3,13 @@ import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
 import { getTopDistributorsTool, getMonthlySalesTool } from "./agentTools.js";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { HumanMessage } from "@langchain/core/messages";
+import { configDotenv } from "dotenv";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+configDotenv({ path: path.resolve(__dirname, "../.env") });
 
 
 
