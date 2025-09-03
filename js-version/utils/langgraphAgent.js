@@ -11,11 +11,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 configDotenv({ path: path.resolve(__dirname, "../.env") });
 
-
+const GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
 
 const agentTools = [getTopDistributorsTool, getMonthlySalesTool];
 
-const agentModel = new ChatGoogleGenerativeAI({ temperature: 0 });
+const agentModel = new ChatGoogleGenerativeAI({
+  model: "gemini-2.5-flash",
+  temperature: 0,
+  apiKey: GOOGLE_API_KEY,
+});
 const agentCheckpointer = new MemorySaver();
 
 const agent = createReactAgent({
