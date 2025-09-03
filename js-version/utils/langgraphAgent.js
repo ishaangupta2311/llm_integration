@@ -1,9 +1,6 @@
 import { StateGraph, MemorySaver } from "@langchain/langgraph";
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai";
-import {
-  getTopDistributorsTool,
-  getMonthlySalesTool,
-} from "@/utils/agentTools";
+import { getTopDistributorsTool, getMonthlySalesTool } from "./agentTools.js";
 import { createReactAgent } from "@langchain/langgraph/prebuilt";
 import { HumanMessage } from "@langchain/core/messages";
 
