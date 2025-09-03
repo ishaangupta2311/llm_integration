@@ -85,7 +85,7 @@ async function getMonthlySales({ empId }) {
 }
 
 // Zod-validated tool instances as recommended by LangGraph/LCJS
-const getTopDistributorsTool = tool(
+export const getTopDistributorsTool = tool(
   async ({ empId, topK }) => {
     const limit = typeof topK === "number" ? topK : 10;
     return getTopDistributors({ empId, topK: limit });
@@ -111,21 +111,23 @@ const getTopDistributorsTool = tool(
   }
 );
 
-const getMonthlySalesTool = tool({
-  name: "getMonthlySales",
-  description:
-    "Fetches the monthly sales data for a given employee for the current fiscal year.",
-  schema: z.object({
-    empId: z
-      .number({
-        required_error: "empId is required",
-        invalid_type_error: "empId must be a number",
-      })
-      .int(),
-  }),
-  func: async ({ empId }) => {
+export const getMonthlySalesTool = tool(
+  async ({ empId }) => {
     return getMonthlySales({ empId });
   },
-});
+  {
+    name: "getMonthlySales",
+    description:
+      "Fetches the monthly sales data for a given employee for the current fiscal year.",
+    schema: z.object({
+      empId: z
+        .number({
+          required_error: "empId is required",
+          invalid_type_error: "empId must be a number",
+        })
+        .int(),
+    }),
+  }
+);
 
 export { getTopDistributorsTool, getMonthlySalesTool };
