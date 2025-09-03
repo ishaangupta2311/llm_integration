@@ -29,12 +29,19 @@ const agent = createReactAgent({
 });
 
 const agentFinalState = await agent.invoke(
-  { messages: [new HumanMessage("Hello, how are you? my empid is 100009")] },
+  { messages: [new HumanMessage("Hello, how are you? my empid is 10000009")] },
   { configurable: { thread_id: "42" } }
 );
 
-console.log(agentFinalState.messages[agentFinalState.messages.length - 1].content);
+console.log(
+  agentFinalState.messages[agentFinalState.messages.length - 1].content
+);
 
 const agentNextState = await agent.invoke(
-  {messages: [new HumanMessage("Who is my top distributor?")]},
-)
+  { messages: [new HumanMessage("Who is my top distributor?")] },
+  { configurable: { thread_id: "42" } }
+);
+
+console.log(
+  agentNextState.messages[agentNextState.messages.length - 1].content
+);
