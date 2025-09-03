@@ -1,7 +1,12 @@
-import { configDotenv } from "dotenv";
-import { tool } from "@langchain/core/tool";
+import { tool } from "@langchain/core/tools";
 import { z } from "zod";
-configDotenv();
+import { configDotenv } from "dotenv";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+configDotenv({ path: path.resolve(__dirname, "../.env") });
 
 const monthlySalesURL = process.env.MONTHLY_SALES_API;
 const topDistributorsURL = process.env.TOP_DISTRIBUTORS_API;
