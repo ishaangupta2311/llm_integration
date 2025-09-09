@@ -4,7 +4,8 @@ import { configDotenv } from "dotenv";
 // Read API key from env and pass explicitly to avoid ADC fallback
 configDotenv();
 
-const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+const apiKey =
+  process.env.GEMINI_API_KEY || "AIzaSyDIJNeof3egeXax69K_Wnx_G5P40rzDMu";
 if (!apiKey) {
   console.error(
     "Missing API key. Set GEMINI_API_KEY or GOOGLE_API_KEY in your environment."
