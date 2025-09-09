@@ -6,6 +6,10 @@ import { HumanMessage } from "@langchain/core/messages";
 import { configDotenv } from "dotenv";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { tool } from "@langchain/core/tools";
+
+
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
