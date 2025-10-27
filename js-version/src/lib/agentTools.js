@@ -60,35 +60,6 @@ async function getTopDistributors({ empId, topK = 10 }) {
   }
 }
 
-/**
- * Fetches the monthly sales data for a given employee for the current Fiscal Year.
- * The data is fetched from the suprsales API.
- * @param {Number} empId - The employee ID for which to fetch monthly sales.
- * @returns {Array} Array of monthly sales data for the employee.
- * Each entry in the array looks like :
- * {
- *      "MONTH_YEAR": "April 2025",
- *      "TOTAL_SALES": 5903124.36
- * }
- */
-async function getMonthlySales({ empId }) {
-  console.log(`Tool Call: getMonthlySales(empId=${empId})`);
-  if (typeof empId !== "number") {
-    throw new TypeError("empId must be a positive number");
-  }
-  if (typeof monthlySalesURL === "undefined" || monthlySalesURL === null) {
-    throw new Error("Monthly sales endpoint URL is not defined");
-  }
-  try {
-    const url = monthlySalesURL + empId;
-    const response = await fetch(url);
-    const monthlySales = await response.json();
-    return JSON.stringify(monthlySales);
-  } catch (e) {
-    console.error(`Error in getMonthlySales for empId ${empId}:`, e);
-    return []; // Return empty array on error
-  }
-}
 
 /**
  * Universal API query function that handles multiple data endpoints
@@ -265,24 +236,6 @@ export const getTopDistributorsTool = tool(
   }
 );
 
-export const getMonthlySalesTool = tool(
-  async ({ empId }) => {
-    return getMonthlySales({ empId });
-  },
-  {
-    name: "getMonthlySales",
-    description:
-      "Fetches the monthly sales data for a given employee for the current fiscal year.",
-    schema: z.object({
-      empId: z
-        .number({
-          required_error: "empId is required",
-          invalid_type_error: "empId must be a number",
-        })
-        .int(),
-    }),
-  }
-);
 
 export const queryApiDataTool = tool(
   async ({ endpoint, params, fields, filters, topK, sortBy, sortOrder }) => {
