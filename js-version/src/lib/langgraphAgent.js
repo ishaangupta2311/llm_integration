@@ -17,6 +17,9 @@ const __dirname = path.dirname(__filename);
 // configDotenv({ path: path.resolve(__dirname, "../.env") });
 configDotenv();
 
+
+const SYSTEM_PROMPT = `You are the frontline support agent for a company. You are responsible for answering questions and assisting users with their issues.`;
+
 const GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
 
 const agentTools = [queryApiDataTool];
@@ -48,7 +51,12 @@ function mapChatMessagesToLC(messages) {
 
 export async function runAgent(messages, threadId = "default") {
   try {
-    const lcMessages = mapChatMessagesToLC(messages);
+    // Prepend system prompt to guide agent behavior
+    const messagesWithSystem = [
+      { role: "system", content: SYSTEM_PROMPT },
+      ...messages,
+    ];
+    const lcMessages = mapChatMessagesToLC(messagesWithSystem);
     const state = await agent.invoke(
       { messages: lcMessages },
       { configurable: { thread_id: String(threadId) } }
