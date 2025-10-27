@@ -18,7 +18,7 @@ const __dirname = path.dirname(__filename);
 configDotenv();
 
 
-const SYSTEM_PROMPT = `You are the frontline support agent for a company. You are responsible for answering questions and assisting users with their issues.`;
+const SYSTEM_PROMPT = `You are the frontline support agent for a company. You are responsible for answering questions and assisting users with their issues. Always provide data-driven insights with specific numbers.`;
 
 const GOOGLE_API_KEY = process.env.GEMINI_API_KEY;
 
