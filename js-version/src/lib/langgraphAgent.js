@@ -68,14 +68,23 @@ export async function runAgent(messages, threadId = "default") {
 
     // Handle rate limit errors specifically
     if (error.message?.includes("429") || error.message?.includes("quota")) {
-      return "I've hit the API rate limit. Please wait a moment and try again, or ask for more specific data with filters to reduce the response size.";
+      return {
+        text: "I've hit the API rate limit. Please wait a moment and try again, or ask for more specific data with filters to reduce the response size.",
+        tools: [],
+      };
     }
 
     // Handle other errors
     if (error.message?.includes("Unknown content")) {
-      return "There was an issue processing the data. Please try asking for more specific information or use filters to narrow down the results.";
+      return {
+        text: "There was an issue processing the data. Please try asking for more specific information or use filters to narrow down the results.",
+        tools: [],
+      };
     }
 
-    return "I encountered an error while processing your request. Please try again with a more specific query.";
+    return {
+      text: "I encountered an error while processing your request. Please try again with a more specific query.",
+      tools: [],
+    };
   }
 }
