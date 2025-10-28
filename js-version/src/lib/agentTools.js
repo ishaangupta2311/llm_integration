@@ -117,31 +117,6 @@ async function queryApiData({
   }
 }
 
-async function fetchOrderHistory() {
-  try {
-    const response = await fetch(currentFinancialYearOrderHistoryURL);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-    const data = await response.json();
-    // Filter each order to only keep the required fields
-    const orderHistoryCache = Array.isArray(data)
-      ? data.map((order) => ({
-          CREATED_BY: order.CREATED_BY,
-          CUSTOMER_ID: order.CUSTOMER_ID,
-          CUST_TYPE_CODE: order.CUST_TYPE_CODE,
-          PLANT_ID: order.PLANT_ID,
-          TOTAL_ORDER_VALUE: order.TOTAL_ORDER_VALUE,
-          ORDER_DATE: order.ORDER_DATE,
-        }))
-      : [];
-    return orderHistoryCache;
-  } catch (error) {
-    console.error("Failed to fetch order history:", error);
-    return [];
-  }
-}
-
 export const queryApiDataTool = tool(
   async ({ endpoint, params, fields, filters, topK, sortBy, sortOrder }) => {
     return queryApiData({
