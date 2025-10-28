@@ -1,4 +1,4 @@
-"use client";;
+"use client";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { CheckIcon, CopyIcon } from "lucide-react";
@@ -30,14 +30,8 @@ const lineNumberTransformer = {
   },
 };
 
-export async function highlightCode(
-  code,
-  language,
-  showLineNumbers = false
-) {
-  const transformers = showLineNumbers
-    ? [lineNumberTransformer]
-    : [];
+export async function highlightCode(code, language, showLineNumbers = false) {
+  const transformers = showLineNumbers ? [lineNumberTransformer] : [];
 
   return await Promise.all([
     codeToHtml(code, {
@@ -86,16 +80,19 @@ export const CodeBlock = ({
           "group relative w-full overflow-hidden rounded-md border bg-background text-foreground",
           className
         )}
-        {...props}>
+        {...props}
+      >
         <div className="relative">
           <div
             className="overflow-hidden dark:hidden [&>pre]:m-0 [&>pre]:bg-background! [&>pre]:p-4 [&>pre]:text-foreground! [&>pre]:text-sm [&_code]:font-mono [&_code]:text-sm"
             // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-            dangerouslySetInnerHTML={{ __html: html }} />
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
           <div
             className="hidden overflow-hidden dark:block [&>pre]:m-0 [&>pre]:bg-background! [&>pre]:p-4 [&>pre]:text-foreground! [&>pre]:text-sm [&_code]:font-mono [&_code]:text-sm"
             // biome-ignore lint/security/noDangerouslySetInnerHtml: "this is needed."
-            dangerouslySetInnerHTML={{ __html: darkHtml }} />
+            dangerouslySetInnerHTML={{ __html: darkHtml }}
+          />
           {children && (
             <div className="absolute top-2 right-2 flex items-center gap-2">
               {children}
@@ -142,7 +139,8 @@ export const CodeBlockCopyButton = ({
       onClick={copyToClipboard}
       size="icon"
       variant="ghost"
-      {...props}>
+      {...props}
+    >
       {children ?? <Icon size={14} />}
     </Button>
   );
