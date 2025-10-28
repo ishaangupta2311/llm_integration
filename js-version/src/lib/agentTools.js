@@ -14,8 +14,6 @@ const employeeDataURL = process.env.EMPLOYEE_DATA_API;
 const currentFinancialYearOrderHistoryURL =
   "https://suprsales.in:5034/suprsales_api/Order/getCurrentFinancialYearOrder";
 
-const filteredOrderHistory = await fetchOrderHistory();
-
 /**
  * Universal API query function that handles multiple data endpoints
  * Optimized to prevent token limit issues and rate limiting
@@ -58,12 +56,7 @@ async function queryApiData({
     let data = await response.json();
     if (!Array.isArray(data)) data = [data];
 
-    // Apply default limit if no topK specified
-    const effectiveTopK = topK || defaultLimits[endpoint];
-    if (effectiveTopK && effectiveTopK > 0) {
-      data = data.slice(0, effectiveTopK);
-    }
-
+    // Apply filters FIRST (before topK limiting)
     if (filters && Object.keys(filters).length > 0) {
       data = data.filter((item) => {
         return Object.entries(filters).every(([key, value]) => {
@@ -77,6 +70,12 @@ async function queryApiData({
           return item[key] === value;
         });
       });
+    }
+
+    // THEN apply topK limit
+    const effectiveTopK = topK || defaultLimits[endpoint];
+    if (effectiveTopK && effectiveTopK > 0) {
+      data = data.slice(0, effectiveTopK);
     }
 
     if (sortBy && data.length > 0) {
