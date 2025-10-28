@@ -27,7 +27,17 @@ async function queryApiData({
   sortBy = null,
   sortOrder = "desc",
 }) {
-  console.log(`Tool Call: queryApiData(endpoint=${endpoint}, topK=${topK})`);
+  console.log(
+    `Tool Call: queryApiData(` +
+      `endpoint=${endpoint}, ` +
+      `params=${JSON.stringify(params)}, ` +
+      `fields=${JSON.stringify(fields)}, ` +
+      `filters=${JSON.stringify(filters)}, ` +
+      `topK=${topK}, ` +
+      `sortBy=${sortBy}, ` +
+      `sortOrder=${sortOrder}` +
+      `)`
+  );
 
   const endpoints = {
     monthly_sales: (empId) => `${monthlySalesURL}${empId}`,
@@ -130,14 +140,21 @@ export const queryApiDataTool = tool(
   },
   {
     name: "queryApiData",
-    description: `Universal function to query API endpoints intelligently 
-    Available endpoints:
-  - 'monthly_sales': Monthly sales data (requires empId)
-  - 'top_distributors': Top distributors (requires empId)  
-  - 'employee_data': All employee information
-  - 'order_history': Current financial year orders
-  
-  Returns filtered JSON array based on specified criteria.`,
+    description: `Universal function to query API endpoints with filtering, sorting, and field selection.
+
+Available endpoints and their fields:
+- 'monthly_sales': Monthly sales data (requires empId in params)
+- 'top_distributors': Top distributors (requires empId in params)  
+- 'employee_data': Employee information (fields: EMP_ID, EMP_NAME, EMP_CODE, PLANT_ID, etc.)
+- 'order_history': Current FY orders (fields: CREATED_BY, CUSTOMER_ID, STATUS, STATUS_DESCRIPTION, PLANT_ID, TOTAL_ORDER_VALUE, ORDER_DATE)
+
+Filtering examples:
+- Filter by exact match: {CREATED_BY: "MKTG0562"}
+- Filter by status description: {STATUS_DESCRIPTION: "Pending"}
+- Filter by multiple conditions: {CREATED_BY: "MKTG0562", STATUS: 11}
+- Filter by range: {TOTAL_ORDER_VALUE: {$gt: 5000}}
+
+Returns filtered JSON array based on specified criteria.`,
     schema: z.object({
       endpoint: z
         .enum([
@@ -162,7 +179,7 @@ export const queryApiDataTool = tool(
         .record(z.any())
         .optional()
         .describe(
-          "Filter conditions (e.g., {PLANT_ID: 'BALA'} or {TOTAL_SALES: {$gt: 1000}})"
+          "Filter conditions as key-value pairs. Examples: {CREATED_BY: 'MKTG0562'}, {STATUS_DESCRIPTION: 'Pending'}, {PLANT_ID: 'BALA', STATUS: 11}"
         ),
       topK: z
         .number()
