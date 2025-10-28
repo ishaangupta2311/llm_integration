@@ -69,7 +69,7 @@ export default function ChatPage() {
     const newMessages = [...messages, userMsg];
 
     setMessages(newMessages);
-    setInput("");
+    // Keep the prompt in the textarea after sending to avoid it "disappearing"
     setLoading(true);
     setAborted(false);
 
@@ -91,6 +91,7 @@ export default function ChatPage() {
       const botMsg = {
         role: "assistant",
         content: data.text || "Sorry, I couldn’t generate a response.",
+        tools: Array.isArray(data.tools) ? data.tools : [],
         timestamp: new Date().toISOString(),
         id: crypto.randomUUID(),
       };
@@ -176,6 +177,7 @@ export default function ChatPage() {
                         role={msg.role}
                         content={msg.content}
                         time={formatTime(msg.timestamp)}
+                        tools={msg.tools}
                       />
                     ))}
                   </MessageGroup>
@@ -209,10 +211,7 @@ export default function ChatPage() {
         )}
 
         <CardFooter className="p-4">
-          <form
-            onSubmit={sendMessage}
-            className="flex w-full gap-2 items-end"
-          >
+          <form onSubmit={sendMessage} className="flex w-full gap-2 items-end">
             <div className="flex-1 flex flex-col justify-end">
               <Textarea
                 ref={inputRef}
@@ -368,7 +367,7 @@ function MessageGroup({ role, children }) {
   );
 }
 
-function MessageBubble({ role, content, time }) {
+function MessageBubble({ role, content, time, tools = [] }) {
   const isUser = role === "user";
   return (
     <div
@@ -379,7 +378,36 @@ function MessageBubble({ role, content, time }) {
           : "bg-muted/60 text-foreground"
       )}
     >
-      <div className="whitespace-pre-wrap break-words">{content}</div>
+      <div className={cn("break-words", isUser ? "whitespace-pre-wrap" : "")}>
+        {isUser ? (
+          content
+        ) : (
+          <div className="overflow-x-auto max-w-full">
+            <Response>{content}</Response>
+          </div>
+        )}
+      </div>
+      {!isUser && Array.isArray(tools) && tools.length > 0 && (
+        <div className="mt-2 space-y-2">
+          {tools.map((toolCall, i) => (
+            <Tool key={toolCall.toolCallId || i}>
+              <ToolHeader
+                state={toolCall.state}
+                type={toolCall.name || toolCall.type}
+              />
+              <ToolContent>
+                <ToolInput input={toolCall.input} />
+                {toolCall.state === "output-available" && (
+                  <ToolOutput
+                    errorText={toolCall.errorText}
+                    output={toolCall.output}
+                  />
+                )}
+              </ToolContent>
+            </Tool>
+          ))}
+        </div>
+      )}
       <div
         className={cn(
           "mt-1 text-[10px] opacity-70",
