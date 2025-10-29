@@ -139,8 +139,121 @@ async function queryApiData({
   }
 }
 
+/**
+ * Performs aggregation operations on data
+ */
+function performAggregation(data, aggregation, endpoint, hasFilters) {
+  const { type, field, groupBy } = aggregation;
+
+  if (type === "count") {
+    return {
+      query_type: "count",
+      total_records: data.length,
+      data_source: endpoint,
+      had_filters: hasFilters,
+      result: data.length,
+    };
+  }
+
+  if (type === "sum" && field) {
+    const sum = data.reduce(
+      (acc, item) => acc + (parseFloat(item[field]) || 0),
+      0
+    );
+    return {
+      query_type: "sum",
+      field: field,
+      total_records: data.length,
+      data_source: endpoint,
+      had_filters: hasFilters,
+      result: sum,
+    };
+  }
+
+  if (type === "group" && groupBy) {
+    const grouped = {};
+    data.forEach((item) => {
+      const key = item[groupBy];
+      if (!grouped[key]) {
+        grouped[key] = {
+          count: 0,
+          items: [],
+        };
+      }
+      grouped[key].count += 1;
+      grouped[key].items.push(item);
+    });
+
+    // Convert to array and sort by count descending
+    const result = Object.entries(grouped)
+      .map(([key, value]) => ({
+        [groupBy]: key,
+        count: value.count,
+      }))
+      .sort((a, b) => b.count - a.count);
+
+    return {
+      query_type: "group",
+      grouped_by: groupBy,
+      total_records: data.length,
+      data_source: endpoint,
+      had_filters: hasFilters,
+      group_count: result.length,
+      result: result,
+    };
+  }
+
+  if (type === "group" && field) {
+    // Group by and aggregate a field (e.g., sum by group)
+    const grouped = {};
+    data.forEach((item) => {
+      const key = item[groupBy] || "unknown";
+      if (!grouped[key]) {
+        grouped[key] = {
+          sum: 0,
+          count: 0,
+          avg: 0,
+        };
+      }
+      grouped[key].sum += parseFloat(item[field]) || 0;
+      grouped[key].count += 1;
+    });
+
+    const result = Object.entries(grouped)
+      .map(([key, value]) => ({
+        [groupBy]: key,
+        total: value.sum,
+        count: value.count,
+        average: value.sum / value.count,
+      }))
+      .sort((a, b) => b.total - a.total);
+
+    return {
+      query_type: "group_aggregate",
+      grouped_by: groupBy,
+      aggregated_field: field,
+      total_records: data.length,
+      data_source: endpoint,
+      had_filters: hasFilters,
+      group_count: result.length,
+      result: result,
+    };
+  }
+
+  return { error: "Invalid aggregation parameters", data: [] };
+}
+
 export const queryApiDataTool = tool(
-  async ({ endpoint, params, fields, filters, topK, sortBy, sortOrder }) => {
+  async ({
+    endpoint,
+    params,
+    fields,
+    filters,
+    topK,
+    sortBy,
+    sortOrder,
+    aggregation,
+  }) => {
     return queryApiData({
       endpoint,
       params,
@@ -149,11 +262,12 @@ export const queryApiDataTool = tool(
       topK,
       sortBy,
       sortOrder,
+      aggregation,
     });
   },
   {
     name: "queryApiData",
-    description: `Universal function to query API endpoints with filtering, sorting, and field selection.
+    description: `Universal function to query API endpoints with filtering, sorting, aggregation, and field selection.
 
 Available endpoints and their fields:
 - 'monthly_sales': Monthly sales data (requires empId in params)
@@ -163,11 +277,17 @@ Available endpoints and their fields:
 
 Filtering examples:
 - Filter by exact match: {CREATED_BY: "MKTG0562"}
-- Filter by status description: {STATUS_DESCRIPTION: "Pending"}
+- Filter by status: {STATUS_DESCRIPTION: "Pending"}
 - Filter by multiple conditions: {CREATED_BY: "MKTG0562", STATUS: 11}
 - Filter by range: {TOTAL_ORDER_VALUE: {$gt: 5000}}
 
-Returns filtered JSON array based on specified criteria.`,
+Aggregation examples (NEW):
+- Count total: {type: "count"} - returns total count of records
+- Sum a field: {type: "sum", field: "TOTAL_ORDER_VALUE"} - sums numeric field
+- Group by field: {type: "group", groupBy: "CREATED_BY"} - counts records per group, sorted by count
+- Group and aggregate: {type: "group", groupBy: "CREATED_BY", field: "TOTAL_ORDER_VALUE"} - groups and sums field
+
+Returns filtered/aggregated JSON array or aggregation result with metadata.`,
     schema: z.object({
       endpoint: z
         .enum([
@@ -202,8 +322,26 @@ Returns filtered JSON array based on specified criteria.`,
         .describe("Number of top results to return"),
       sortBy: z.string().optional().describe("Field to sort by"),
       sortOrder: z.enum(["desc", "asc"]).default("desc").optional(),
+      aggregation: z
+        .object({
+          type: z.enum(["count", "sum", "group"]).describe("Aggregation type"),
+          field: z
+            .string()
+            .optional()
+            .describe(
+              "Field to aggregate (for sum or group aggregation). E.g. 'TOTAL_ORDER_VALUE'"
+            ),
+          groupBy: z
+            .string()
+            .optional()
+            .describe(
+              "Field to group by. E.g. 'CREATED_BY' to group orders by employee"
+            ),
+        })
+        .optional()
+        .describe(
+          "Aggregation configuration. Use for counting, summing, or grouping operations"
+        ),
     }),
   }
 );
-
-// Exported tools only; no side-effectful test calls here.
