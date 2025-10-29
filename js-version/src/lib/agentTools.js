@@ -1,3 +1,5 @@
+// src/lib/agentTools.js
+
 import { tool } from "@langchain/core/tools";
 import { z } from "zod";
 import { configDotenv } from "dotenv";
@@ -26,6 +28,7 @@ async function queryApiData({
   topK = null,
   sortBy = null,
   sortOrder = "desc",
+  aggregation = null, // NEW: {type: 'count'|'sum'|'group', field?: string, groupBy?: string}
 }) {
   console.log(
     `Tool Call: queryApiData(` +
@@ -35,7 +38,8 @@ async function queryApiData({
       `filters=${JSON.stringify(filters)}, ` +
       `topK=${topK}, ` +
       `sortBy=${sortBy}, ` +
-      `sortOrder=${sortOrder}` +
+      `sortOrder=${sortOrder}, ` +
+      `aggregation=${JSON.stringify(aggregation)}` +
       `)`
   );
 
@@ -51,7 +55,7 @@ async function queryApiData({
     monthly_sales: 12, // Max 12 months
     top_distributors: 20, // Max 20 distributors
     employee_data: 50, // Max 50 employees
-    order_history: 100, // Max 100 orders
+    order_history: 100, // Max 100 orders (only when no filters are applied)
   };
 
   try {
@@ -67,7 +71,8 @@ async function queryApiData({
     if (!Array.isArray(data)) data = [data];
 
     // Apply filters FIRST (before topK limiting)
-    if (filters && Object.keys(filters).length > 0) {
+    const hasFilters = !!(filters && Object.keys(filters).length > 0);
+    if (hasFilters) {
       data = data.filter((item) => {
         return Object.entries(filters).every(([key, value]) => {
           if (value && typeof value === "object") {
@@ -82,8 +87,17 @@ async function queryApiData({
       });
     }
 
-    // THEN apply topK limit
-    const effectiveTopK = topK || defaultLimits[endpoint];
+    // Handle aggregation BEFORE topK
+    if (aggregation) {
+      return JSON.stringify(
+        performAggregation(data, aggregation, endpoint, hasFilters)
+      );
+    }
+
+    // Apply topK limit
+    const shouldApplyDefaultCap = !hasFilters || endpoint !== "order_history";
+    const effectiveTopK =
+      topK || (shouldApplyDefaultCap ? defaultLimits[endpoint] : null);
     if (effectiveTopK && effectiveTopK > 0) {
       data = data.slice(0, effectiveTopK);
     }
@@ -108,17 +122,16 @@ async function queryApiData({
       });
     }
 
-    // For large datasets, provide summary instead of full data
-    if (data.length > 50) {
+    // For large datasets, provide summary
+    if (data.length > 50 && !topK && !aggregation) {
       const summary = {
         total_records: data.length,
         sample_data: data.slice(0, 5),
-        message: `Showing first 5 of ${data.length} records. Use filters or topK to get specific results.`,
+        message: `Showing first 5 of ${data.length} records. Use filters, topK, or aggregation for specific results.`,
       };
       return JSON.stringify(summary);
     }
 
-    // Serialize the data to ensure compatibility with LangChain
     return JSON.stringify(data);
   } catch (error) {
     console.error("Error in queryApiData:", error);
