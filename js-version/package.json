@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next --env-file=.env dev --turbopack",
     "build": "next build --turbopack",
     "start": "next start",
     "lint": "eslint"
@@ -19,6 +19,7 @@
     "@radix-ui/react-separator": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.8",
+    "@sap/hana-client": "^2.26.18",
     "ai": "^5.0.81",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
