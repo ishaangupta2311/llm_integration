@@ -1,4 +1,4 @@
-// app/chat/page.js
+// src/app/chat/page.js
 "use client";
 
 import { useRef, useEffect, useState, useMemo } from "react";
@@ -88,9 +88,25 @@ export default function ChatPage() {
 
       const data = await res.json();
 
+      console.log("=== Response from /api/chat ===");
+      console.log("Text:", data.text);
+      console.log("Tools received:", data.tools);
+
+      // Log each tool's input
+      if (Array.isArray(data.tools)) {
+        data.tools.forEach((tool, idx) => {
+          console.log(`Tool ${idx}:`, {
+            name: tool.name,
+            input: tool.input,
+            state: tool.state,
+            output: tool.output ? "(output exists)" : "(no output)",
+          });
+        });
+      }
+
       const botMsg = {
         role: "assistant",
-        content: data.text || "Sorry, I couldn’t generate a response.",
+        content: data.text || "Sorry, I couldn't generate a response.",
         tools: Array.isArray(data.tools) ? data.tools : [],
         timestamp: new Date().toISOString(),
         id: crypto.randomUUID(),
